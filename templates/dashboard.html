@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Cell Frequencies</title>
+</head>
+<body>
+  <h1>Cell Population Frequencies</h1>
+  <table border="1">
+    <tr><th>sample</th><th>total_count</th><th>population</th><th>count</th><th>percentage</th></tr>
+    {% for row in rows %}
+    <tr>
+      <td>{{ row.sample }}</td>
+      <td>{{ row.total_count }}</td>
+      <td>{{ row.population }}</td>
+      <td>{{ row.count }}</td>
+      <td>{{ "%.4f"|format(row.percentage) }}%</td>
+    </tr>
+    {% endfor %}
+  </table>
+</body>
+</html>
