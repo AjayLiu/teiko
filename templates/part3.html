@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Responders vs Non-responders</title>
+</head>
+<body>
+  <p><a href="/">Back to Dashboard</a></p>
+  <h1>Part 2: Responders vs Non-responders (melanoma + miraclib, PBMC)</h1>
+  <p>Conclusion: The cell population cd4_t_cell shows most significant difference in relative frequency between responders and non-responders (p-value = {{ stats[3]['p'] }}).</p>
+  <table border="1">
+    <tr><th>population</th><th>n_responders</th><th>n_non_responders</th><th>p_value</th><th>significant</th></tr>
+    {% for s in stats %}
+    <tr>
+      <td>{{ s['pop'] }}</td>
+      <td>{{ s.n_yes }}</td>
+      <td>{{ s.n_no }}</td>
+      <td>{% if s.p is not none %}{{ "%.4f"|format(s.p) }}{% else %}-{% endif %}</td>
+      <td>{{ "yes" if s.sig else "no" }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <p><img src="data:image/png;base64,{{ plot_b64 }}" alt="boxplots"></p>
+
+</body>
+</html>

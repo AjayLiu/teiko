@@ -1,18 +1,13 @@
-import base64
-import io
 import sqlite3
 from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from scipy.stats import mannwhitneyu
-from flask import Flask, render_template
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "cell_counts.db"
 POPS = ["b_cell", "cd8_t_cell", "cd4_t_cell", "nk_cell", "monocyte"]
-
-app = Flask(__name__)
 
 
 def responder_data():
@@ -36,30 +31,7 @@ def responder_data():
     return by_pop
 
 
-@app.route("/")
-def index():
-    return render_template("index.html")
-
-
-@app.route("/part2")
-def part2():
-    data = []
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-    cur.execute("SELECT id, b_cell, cd8_t_cell, cd4_t_cell, nk_cell, monocyte FROM samples ORDER BY id")
-    for row in cur:
-        counts = [row[i] for i in range(1, 6)]
-        total = sum(counts)
-        if total == 0:
-            continue
-        for pop, c in zip(POPS, counts):
-            data.append({"sample": row[0], "total_count": total, "population": pop, "count": c, "percentage": (c / total) * 100})
-    conn.close()
-    return render_template("part2.html", rows=data)
-
-
-@app.route("/part3")
-def part3():
+if __name__ == "__main__":
     by_pop = responder_data()
     stats = []
     for p in POPS:
@@ -70,6 +42,11 @@ def part3():
         _, pval = mannwhitneyu(yes, no, alternative="two-sided")
         stats.append({"pop": p, "n_yes": len(yes), "n_no": len(no), "p": pval, "sig": pval < 0.05})
 
+    print("population\tn_responders\tn_non_responders\tp_value\tsignificant")
+    for s in stats:
+        pstr = "%.4f" % s["p"] if s["p"] is not None else "-"
+        print(f"{s['pop']}\t{s['n_yes']}\t{s['n_no']}\t{pstr}\t{'yes' if s['sig'] else 'no'}")
+
     fig, axes = plt.subplots(2, 3, figsize=(10, 6))
     for i, p in enumerate(POPS):
         ax = axes.flatten()[i]
@@ -78,13 +55,5 @@ def part3():
         ax.set_title(p)
     axes.flatten()[5].axis("off")
     plt.tight_layout()
-    buf = io.BytesIO()
-    plt.savefig(buf, format="png", dpi=120)
+    plt.savefig(BASE_DIR / "responder_comparison.png", dpi=120)
     plt.close()
-    buf.seek(0)
-    img_b64 = base64.b64encode(buf.read()).decode()
-    return render_template("part3.html", stats=stats, plot_b64=img_b64)
-
-
-if __name__ == "__main__":
-    app.run(debug=True)

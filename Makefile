@@ -6,6 +6,7 @@ setup:
 pipeline: setup
 	python load_data.py
 	python data_overview.py
+	python response_analysis.py
 
 dashboard:
 	python dashboard.py
