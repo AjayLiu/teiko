@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Baseline Subset</title>
+  <style>
+    .summary-row { display: flex; gap: 2rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .summary-row > div { flex: 0 0 auto; }
+  </style>
+</head>
+<body>
+  <p><a href="/">Back to Dashboard</a></p>
+  <h1>Part 4: Baseline subset (melanoma, PBMC, time=0, miraclib)</h1>
+
+  <h2>Samples</h2>
+  <h3>Filter samples</h3>
+  <p>
+    Response:
+    <label><input type="radio" name="resp" value="all" checked> All</label>
+    <label><input type="radio" name="resp" value="yes"> Responders</label>
+    <label><input type="radio" name="resp" value="no"> Non-responders</label>
+  </p>
+  <p>
+    Sex:
+    <label><input type="radio" name="sex" value="all" checked> All</label>
+    <label><input type="radio" name="sex" value="F"> Female</label>
+    <label><input type="radio" name="sex" value="M"> Male</label>
+  </p>
+
+  <div class="summary-row">
+    <div>
+      <h3>By project</h3>
+      <table border="1" id="by-project-table">
+        <tr><th>project</th><th>n_samples</th></tr>
+        {% for r in by_project %}
+        <tr data-key="{{ r.project }}"><td>{{ r.project }}</td><td class="summary-count">{{ r.n_samples }}</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+    <div>
+      <h3>By response</h3>
+      <table border="1" id="by-response-table">
+        <tr><th>response</th><th>n_subjects</th></tr>
+        {% for r in by_response %}
+        <tr data-key="{{ r.response if r.response is not none else '' }}"><td>{{ r.response if r.response is not none else "" }}</td><td class="summary-count">{{ r.n_subjects }}</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+    <div>
+      <h3>By sex</h3>
+      <table border="1" id="by-sex-table">
+        <tr><th>sex</th><th>n_subjects</th></tr>
+        {% for r in by_sex %}
+        <tr data-key="{{ r.sex }}"><td>{{ r.sex }}</td><td class="summary-count">{{ r.n_subjects }}</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+
+  <table border="1" id="sample-table">
+    <tr><th>sample</th><th>subject</th><th>project</th><th>response</th><th>sex</th></tr>
+    {% for r in rows %}
+    <tr data-response="{{ r.response or '' }}" data-sex="{{ r.sex }}" data-project="{{ r.project }}" data-subject="{{ r.subject }}">
+      <td>{{ r.sample }}</td>
+      <td>{{ r.subject }}</td>
+      <td>{{ r.project }}</td>
+      <td>{{ r.response }}</td>
+      <td>{{ r.sex }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <script>
+    function applyFilter() {
+      var resp = document.querySelector('input[name="resp"]:checked').value;
+      var sex = document.querySelector('input[name="sex"]:checked').value;
+      var rows = document.querySelectorAll("#sample-table tr");
+      var visible = [];
+
+      for (var i = 1; i < rows.length; i++) {
+        var row = rows[i];
+        var rowResp = (row.getAttribute("data-response") || "").toLowerCase();
+        var rowSex = (row.getAttribute("data-sex") || "").toUpperCase();
+        var show = (resp === "all" || rowResp === resp) && (sex === "all" || rowSex === sex.toUpperCase());
+        row.style.display = show ? "" : "none";
+        if (show) visible.push(row);
+      }
+
+      var projectCount = {}, responseSubj = {}, sexSubj = {};
+      for (var i = 0; i < visible.length; i++) {
+        var r = visible[i];
+        var p = r.getAttribute("data-project");
+        projectCount[p] = (projectCount[p] || 0) + 1;
+        var s = r.getAttribute("data-subject");
+        var rv = (r.getAttribute("data-response") || "").toLowerCase();
+        var sx = (r.getAttribute("data-sex") || "").toUpperCase();
+        if (!responseSubj[rv]) responseSubj[rv] = {};
+        responseSubj[rv][s] = true;
+        if (!sexSubj[sx]) sexSubj[sx] = {};
+        sexSubj[sx][s] = true;
+      }
+
+      document.querySelectorAll("#by-project-table tr[data-key]").forEach(function(tr) {
+        tr.querySelector(".summary-count").textContent = projectCount[tr.getAttribute("data-key")] || 0;
+      });
+      document.querySelectorAll("#by-response-table tr[data-key]").forEach(function(tr) {
+        var k = tr.getAttribute("data-key");
+        tr.querySelector(".summary-count").textContent = responseSubj[k] ? Object.keys(responseSubj[k]).length : 0;
+      });
+      document.querySelectorAll("#by-sex-table tr[data-key]").forEach(function(tr) {
+        var k = tr.getAttribute("data-key");
+        tr.querySelector(".summary-count").textContent = sexSubj[k] ? Object.keys(sexSubj[k]).length : 0;
+      });
+    }
+
+    document.querySelectorAll('input[name="resp"], input[name="sex"]').forEach(function(el) {
+      el.addEventListener("change", applyFilter);
+    });
+    applyFilter();
+  </script>
+</body>
+</html>
