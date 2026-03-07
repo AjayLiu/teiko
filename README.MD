@@ -47,4 +47,4 @@ I chose Flask for its minimal footprint. For the sake of this technical, I kept 
 
 ### Link
 
-[ajayliu.pythonanywhere.com](https://ajayliu.pythonanywhere.com)
+[Heroku](https://teiko-718acc1fb963.herokuapp.com/)
